@@ -43,11 +43,6 @@ func SimplifyExpression(expr IExpression) {
 	var bModified bool
 
 	expr.AllTermsWithVar(func(vars VariableList, xs TermList) bool {
-		if 2 <= len(xs) {
-			bModified = true
-		} else if 0 == len(xs) {
-			panic("should not be here")
-		}
 
 		var total float64
 		for _, term := range xs {
@@ -103,9 +98,6 @@ func (this *_Expression) SetTerms(terms ...ITerm) {
 
 func (this _Expression) AllTermsWithVar(cb func(vars VariableList, xs TermList) bool) {
 	for _, vals := range this.terms {
-		if 0 == len(vals.termlist) {
-			continue
-		}
 		if !cb(vals.vars, vals.termlist) {
 			return
 		}

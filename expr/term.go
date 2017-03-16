@@ -2,6 +2,8 @@ package expr
 
 import (
 	"sort"
+
+	"github.com/noypi/math0"
 )
 
 type ITerm interface {
@@ -65,15 +67,24 @@ func (this _Term) SetVars(vs ...IVariable) {
 		return
 	}
 
-	this.vars = append(this.vars, vs[0])
+	if !math0.IsApproxEqual(vs[0].Power(), 0.0) {
+		this.vars = append(this.vars, vs[0])
+	}
 	if 1 == len(vs) {
 		return
 	}
 
 	for i, _ := range vs[1:] {
+		if math0.IsApproxEqual(vs[i].Power(), 0.0) {
+			continue
+		}
+
 		jprev := len(this.vars) - 1
 		if vs[i].Name() == this.vars[jprev].Name() {
-			this.vars[jprev].AddPower(vs[i].Power())
+			if math0.IsApproxEqual(this.vars[jprev].AddPower(vs[i].Power()), 0.0) {
+				// removed if 0.0
+				this.vars = this.vars[:jprev]
+			}
 		} else {
 			this.vars = append(this.vars, vs[i])
 		}

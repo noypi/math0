@@ -21,12 +21,12 @@ func TestVariable(t *testing.T) {
 		Variable("y"),
 		Variable("za"),
 	}
-	assert.Equal("v*x^3*y^3*z^2*za", varlist.String())
+	assert.Equal("v*x^3*y^3*z^2*za", varlist.Key())
 
 	varlist = VariableList{
 		Variable("z"),
 	}
-	assert.Equal("z", varlist.String())
+	assert.Equal("z", varlist.Key())
 
 }
 
@@ -36,7 +36,7 @@ func BenchmarkVariableStringOneVars(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		varlist.String()
+		varlist.Key()
 	}
 }
 
@@ -55,6 +55,6 @@ func BenchmarkVariableStringFiveVars(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		varlist.String()
+		varlist.Key()
 	}
 }
