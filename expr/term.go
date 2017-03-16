@@ -1,12 +1,14 @@
 package expr
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/noypi/math0"
 )
 
 type ITerm interface {
+	fmt.Stringer
 	C() float64
 	SetC(c float64)
 
@@ -16,13 +18,17 @@ type ITerm interface {
 	VarAt(i int) IVariable
 
 	Clone() ITerm
+	Key() string
+	PowerTotal() float64
 }
 
 type TermList []ITerm
 
 type _Term struct {
-	c    float64
-	vars VariableList
+	c          float64
+	vars       VariableList
+	key        *string
+	powertotal *float64
 }
 
 func NewTerm(c float64, vs ...IVariable) ITerm {
@@ -61,7 +67,9 @@ func (this _Term) SetC(c float64) {
 	this.c = c
 }
 
-func (this _Term) SetVars(vs ...IVariable) {
+func (this *_Term) SetVars(vs ...IVariable) {
+	this.key = nil
+	this.powertotal = nil
 	this.vars = this.vars[:0]
 	if 0 == len(vs) {
 		return
@@ -81,7 +89,8 @@ func (this _Term) SetVars(vs ...IVariable) {
 
 		jprev := len(this.vars) - 1
 		if vs[i].Name() == this.vars[jprev].Name() {
-			if math0.IsApproxEqual(this.vars[jprev].AddPower(vs[i].Power()), 0.0) {
+			this.vars[jprev] = this.vars[jprev].AddPower(vs[i].Power())
+			if math0.IsApproxEqual(this.vars[jprev].Power(), 0.0) {
 				// removed if 0.0
 				this.vars = this.vars[:jprev]
 			}
@@ -95,6 +104,26 @@ func (this _Term) SetVars(vs ...IVariable) {
 		})
 	}
 	this.vars = vs
+}
+
+func (this *_Term) Key() string {
+	if nil == this.key {
+		k := this.vars.Key()
+		this.key = &k
+	}
+	return *this.key
+}
+
+func (this _Term) String() string {
+	return fmt.Sprintf("%s*%s", toTrimZero(this.c), this.vars.String())
+}
+
+func (this *_Term) PowerTotal() float64 {
+	if nil == this.powertotal {
+		n := this.vars.PowerTotal()
+		this.powertotal = &n
+	}
+	return *this.powertotal
 }
 
 func (this _Term) Clone() ITerm {

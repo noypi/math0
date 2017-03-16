@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/noypi/math0"
 )
 
+// should be immutable
 type IVariable interface {
 	fmt.Stringer
 	Name() string
 	Power() float64
-	AddPower(float64) float64
+	AddPower(float64) IVariable
 }
 
 type _Variable struct {
@@ -42,9 +42,8 @@ func (this _Variable) Power() float64 {
 	return this.power
 }
 
-func (this *_Variable) AddPower(n float64) float64 {
-	this.power += n
-	return this.power
+func (this *_Variable) AddPower(n float64) IVariable {
+	return VariableN(this.name, this.power+n)
 }
 
 func (this _Variable) String() string {
@@ -52,20 +51,22 @@ func (this _Variable) String() string {
 		return this.name
 	}
 
-	spow := fmt.Sprintf("%f", this.power)
-	spow = strings.TrimRight(spow, ".0")
-	return fmt.Sprintf("%s^%s", this.name, spow)
+	return fmt.Sprintf("%s^%s", this.name, toTrimZero(this.power))
 }
 
 func (this VariableList) Simplify() (out VariableList) {
+	if this.IsSimplified() {
+		return this
+	}
+
 	vs := this
 	if 1 >= len(vs) {
 		return this
 	}
 
-	sort.Slice(vs, func(i, j int) bool {
-		return vs[i].Name() < vs[j].Name()
-	})
+	if !vs.IsSorted() {
+		sort.Slice(vs, vs.Less)
+	}
 
 	out = VariableList{vs[0]}
 	outPrev := vs[0]
@@ -75,9 +76,11 @@ func (this VariableList) Simplify() (out VariableList) {
 		}
 
 		if outPrev.Name() == vs[i].Name() {
-			outPrev.AddPower(vs[i].Power())
+			outPrev = outPrev.AddPower(vs[i].Power())
 			if math0.IsApproxEqual(outPrev.Power(), 0.0) {
 				out = out[:len(out)-1]
+			} else {
+				out[len(out)-1] = outPrev
 			}
 		} else {
 			if !math0.IsApproxEqual(vs[i].Power(), 0.0) {
@@ -91,11 +94,49 @@ func (this VariableList) Simplify() (out VariableList) {
 	return out
 }
 
+func (this VariableList) Less(i, j int) bool {
+	return this[i].Name() < this[j].Name()
+}
+
+func (this VariableList) IsSimplified() bool {
+	if 1 >= len(this) {
+		return true
+	}
+
+	for i, iprev := 1, 0; i < len(this); i, iprev = i+1, iprev+1 {
+		if !this.Less(iprev, i) {
+			return false
+		}
+	}
+	return true
+}
+
+func (this VariableList) IsSorted() bool {
+	if 1 >= len(this) {
+		return true
+	}
+	return sort.SliceIsSorted(this, this.Less)
+}
+
 func (this *VariableList) Key() string {
 	if 1 < len(*this) {
 		*this = this.Simplify()
 	}
 	return (*this).String()
+}
+
+func (this VariableList) PowerTotal() float64 {
+	if 0 == len(this) {
+		return 0.0
+	} else if 1 == len(this) {
+		return this[0].Power()
+	}
+
+	total := 0.0
+	for _, v := range this {
+		total += v.Power()
+	}
+	return total
 }
 
 func (this VariableList) String() string {

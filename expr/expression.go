@@ -1,19 +1,21 @@
 package expr
 
 import (
+	"bytes"
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/noypi/math0"
 )
 
 type IExpression interface {
+	fmt.Stringer
 	EachTerm(func(ITerm) bool)
-	EachTermByVar(vars VariableList, cb func(ITerm) bool)
-	AllTermsWithVar(func(vars VariableList, xs TermList) bool)
 	Terms() TermList   // sorted by power
 	AddTerm(...ITerm)  // appends
 	SetTerms(...ITerm) // clears, then sets
+	Key() string
 	Clone() IExpression
 }
 
@@ -38,104 +40,154 @@ func ValueOfExpr(expr IExpression, m IValuation) (value float64, err error) {
 	return
 }
 
-func SimplifyExpression(expr IExpression) {
-	var terms []ITerm // new terms
-	var bModified bool
+func SimplifyExpression(expr IExpression) (out TermList, bDidSomething bool) {
 
-	expr.AllTermsWithVar(func(vars VariableList, xs TermList) bool {
-
-		var total float64
-		for _, term := range xs {
-			total += term.C()
-		}
-
-		if math0.IsApproxEqual(total, 0.0) {
-			bModified = true
-			return true
-		}
-
-		o := xs[0].Clone()
-		o.SetC(total)
-		terms = append(terms, o)
-		return true
-	})
-
-	if bModified {
-		expr.SetTerms(terms...)
+	terms := expr.Terms()
+	if 1 >= len(terms) {
+		return
 	}
+	if terms.IsSimplified() {
+		return
+	}
+	if !terms.IsSorted() {
+		sort.Slice(terms, terms.Less)
+	} else {
+		bDidSomething = true
+	}
+
+	out = TermList{terms[0]}
+	outPrev := terms[0]
+	for i := 1; i < len(terms); i++ {
+		if math0.IsApproxEqual(terms[i].C(), 0.0) {
+			continue
+		}
+
+		if terms[i].Key() == outPrev.Key() {
+			outPrev.SetC(outPrev.C() + terms[i].C())
+			if math0.IsApproxEqual(outPrev.C(), 0.0) {
+				out = out[:len(out)-1]
+			}
+		} else {
+			out = append(out, terms[i])
+			outPrev = terms[i]
+		}
+	}
+
+	return
 }
 
-type _termsMapVal struct {
-	termlist TermList
-	vars     VariableList
-}
 type _Expression struct {
-	terms map[string]_termsMapVal
+	terms TermList
+	key   *string
 }
 
 func NewExpr() IExpression {
 	return &_Expression{
-		terms: map[string]_termsMapVal{},
+		terms: TermList{},
 	}
 }
 
-func (this *_Expression) AddTerm(terms ...ITerm) {
-	for _, term := range terms {
-		k := term.Vars().String()
-		mapVal, has := this.terms[k]
-		if !has {
-			mapVal.vars = term.Vars()
+func (this *_Expression) Key() string {
+	if nil != this.key {
+		return *this.key
+	}
+	if 0 == len(this.terms) {
+		k := "0"
+		this.key = &k
+		return *this.key
+	}
+
+	buf := bytes.NewBufferString(this.terms[0].Key())
+	if 1 == len(this.terms) {
+		return buf.String()
+	}
+
+	for _, term := range this.terms[1:] {
+		buf.WriteString(",")
+		buf.WriteString(term.Key())
+	}
+
+	k := buf.String()
+	this.key = &k
+	return *this.key
+}
+
+func (this _Expression) String() string {
+	if 0 == len(this.terms) {
+		return "0"
+	}
+
+	buf := bytes.NewBufferString(this.terms[0].String())
+	if 1 == len(this.terms) {
+		return buf.String()
+	}
+
+	for _, term := range this.terms[1:] {
+		if 0 < term.C() {
+			buf.WriteString(" + ")
+		} else {
+			buf.WriteString(" - ")
 		}
-		mapVal.termlist = append(mapVal.termlist, term)
-		this.terms[k] = mapVal
+		buf.WriteString(term.String())
+	}
+
+	return buf.String()
+}
+
+func (this *_Expression) AddTerm(terms ...ITerm) {
+	this.key = nil
+	this.terms = append(this.terms, terms...)
+	if newTerms, bWasSimplified := SimplifyExpression(this); bWasSimplified {
+		this.terms = newTerms
 	}
 }
 
 func (this *_Expression) SetTerms(terms ...ITerm) {
-	this.terms = map[string]_termsMapVal{}
+	// this.key = nil // is set in AddTerm()
+	this.terms = this.terms[0:]
 	this.AddTerm(terms...)
 }
 
-func (this _Expression) AllTermsWithVar(cb func(vars VariableList, xs TermList) bool) {
-	for _, vals := range this.terms {
-		if !cb(vals.vars, vals.termlist) {
-			return
-		}
+func (this TermList) IsSorted() bool {
+	if 1 >= len(this) {
+		return true
 	}
+	return sort.SliceIsSorted(this, this.Less)
 }
 
-func (this _Expression) EachTermByVar(vars VariableList, cb func(term ITerm) bool) {
-	vals, _ := this.terms[vars.String()]
-	for _, term := range vals.termlist {
+func (this TermList) IsSimplified() bool {
+	if 1 >= len(this) {
+		return true
+	}
+	for iprev, i := 0, 1; i < len(this); iprev, i = iprev+1, i+1 {
+		if !this.Less(iprev, i) {
+			return false
+		}
+	}
+	return true
+}
+
+func (this TermList) Less(i, j int) bool {
+	if this[i].PowerTotal() == this[j].PowerTotal() {
+		return this[i].Key() < this[j].Key()
+	}
+	return this[i].PowerTotal() < this[j].PowerTotal()
+}
+
+func (this _Expression) Terms() TermList {
+	return this.terms
+}
+
+func (this _Expression) EachTerm(cb func(term ITerm) bool) {
+	for _, term := range this.terms {
 		if !cb(term) {
 			return
 		}
 	}
 }
 
-func (this _Expression) Terms() TermList {
-	var ls TermList
-	for _, vals := range this.terms {
-		ls = append(ls, vals.termlist...)
-	}
-	return ls
-}
-
-func (this _Expression) EachTerm(cb func(term ITerm) bool) {
-	for _, vals := range this.terms {
-		for _, term := range vals.termlist {
-			if !cb(term) {
-				return
-			}
-		}
-	}
-}
-
 func (this _Expression) Clone() IExpression {
 	o := NewExpr()
-	this.EachTerm(func(term ITerm) bool {
-		o.AddTerm(term.Clone())
-		return true
-	})
+	o.SetTerms(this.terms...)
 	return o
 }
