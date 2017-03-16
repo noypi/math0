@@ -5,22 +5,23 @@ import (
 	"fmt"
 
 	"github.com/noypi/mapk"
+	"github.com/noypi/math0"
 )
 
 type IVariable interface {
 	Name() string
-	Power() int
-	AddPower(int) int
+	Power() float64
+	AddPower(float64) float64
 }
 
 type _Variable struct {
 	name  string
-	power int
+	power float64
 }
 
 type VariableList []IVariable
 
-func VariableN(name string, power int) IVariable {
+func VariableN(name string, power float64) IVariable {
 	if 1 <= power {
 		return &_Variable{name: name, power: power}
 	}
@@ -28,18 +29,18 @@ func VariableN(name string, power int) IVariable {
 }
 
 func Variable(name string) IVariable {
-	return VariableN(name, 1)
+	return VariableN(name, 1.0)
 }
 
 func (this _Variable) Name() string {
 	return this.name
 }
 
-func (this _Variable) Power() int {
+func (this _Variable) Power() float64 {
 	return this.power
 }
 
-func (this *_Variable) AddPower(n int) int {
+func (this *_Variable) AddPower(n float64) float64 {
 	this.power += n
 	return this.power
 }
@@ -55,9 +56,9 @@ func (this VariableList) String() string {
 	for _, v := range this {
 		n := m.Get(v.Name())
 		if nil == n {
-			m.Put(v.Name(), 1)
+			m.Put(v.Name(), 1.0)
 		} else {
-			m.Put(v.Name(), n.(int)+1)
+			m.Put(v.Name(), n.(float64)+v.Power())
 		}
 	}
 
@@ -66,10 +67,11 @@ func (this VariableList) String() string {
 		if 0 < buf.Len() {
 			buf.WriteString("*")
 		}
-		if 1 < power.(int) {
-			buf.WriteString(fmt.Sprintf("%s^%d", name, power))
-		} else {
+		if math0.IsApproxEqual(power.(float64), 1.0) {
 			buf.WriteString(name.(string))
+		} else {
+			// TODO // trim zeros
+			buf.WriteString(fmt.Sprintf("%s^%d", name, power))
 		}
 		return true
 	})

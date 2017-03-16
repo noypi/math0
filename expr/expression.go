@@ -1,6 +1,7 @@
 package expr
 
 import (
+	"math"
 	"fmt"
 
 	"github.com/noypi/math0"
@@ -24,7 +25,12 @@ func ValueOfExpr(expr IExpression, m IValuation) (value float64, err error) {
 				err = ErrNoValuationForVar(fmt.Errorf("var=%s has no valuation", v.Name()))
 				return false
 			}
-			value += term.C() * c
+			if math0.IsApproxEqual(v.Power(), 0.0) {
+				value += term.C() 
+			} else {
+				value += term.C() * math.{}
+			}
+
 		}
 		return true
 	})
