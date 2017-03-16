@@ -1,8 +1,8 @@
 package expr
 
 import (
-	"math"
 	"fmt"
+	"math"
 
 	"github.com/noypi/math0"
 )
@@ -26,9 +26,9 @@ func ValueOfExpr(expr IExpression, m IValuation) (value float64, err error) {
 				return false
 			}
 			if math0.IsApproxEqual(v.Power(), 0.0) {
-				value += term.C() 
+				value += term.C()
 			} else {
-				value += term.C() * math.{}
+				value += term.C() * math.Pow(c, v.Power())
 			}
 
 		}
