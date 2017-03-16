@@ -48,13 +48,12 @@ func (this *_Variable) AddPower(n float64) float64 {
 }
 
 func (this _Variable) String() string {
-	spow := fmt.Sprintf("%f", this.power)
-	spow = strings.TrimRight(spow, ".0")
-
 	if math0.IsApproxEqual(this.power, 1.0) {
 		return this.name
 	}
 
+	spow := fmt.Sprintf("%f", this.power)
+	spow = strings.TrimRight(spow, ".0")
 	return fmt.Sprintf("%s^%s", this.name, spow)
 }
 
@@ -93,7 +92,9 @@ func (this VariableList) Simplify() (out VariableList) {
 }
 
 func (this *VariableList) Key() string {
-	*this = this.Simplify()
+	if 1 < len(*this) {
+		*this = this.Simplify()
+	}
 	return (*this).String()
 }
 
