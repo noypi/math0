@@ -1,6 +1,7 @@
 package expr
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 
@@ -63,7 +64,7 @@ func (this _Term) Var(name string) (v IVariable) {
 	return nil
 }
 
-func (this _Term) SetC(c float64) {
+func (this *_Term) SetC(c float64) {
 	this.c = c
 }
 
@@ -115,6 +116,9 @@ func (this *_Term) Key() string {
 }
 
 func (this _Term) String() string {
+	if 0 == len(this.vars) {
+		return toTrimZero(this.c)
+	}
 	return fmt.Sprintf("%s*%s", toTrimZero(this.c), this.vars.String())
 }
 
@@ -128,4 +132,22 @@ func (this *_Term) PowerTotal() float64 {
 
 func (this _Term) Clone() ITerm {
 	return NewTerm(this.c, this.vars...)
+}
+
+func (this TermList) String() string {
+	if 0 == len(this) {
+		return "0"
+	}
+
+	buf := bytes.NewBufferString(this[0].String())
+	if 1 == len(this) {
+		return buf.String()
+	}
+
+	for _, term := range this[1:] {
+		buf.WriteString(" + ")
+		buf.WriteString(term.String())
+	}
+
+	return buf.String()
 }

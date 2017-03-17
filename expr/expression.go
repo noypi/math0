@@ -51,9 +51,8 @@ func SimplifyExpression(expr IExpression) (out TermList, bDidSomething bool) {
 	}
 	if !terms.IsSorted() {
 		sort.Slice(terms, terms.Less)
-	} else {
-		bDidSomething = true
 	}
+	bDidSomething = true
 
 	out = TermList{terms[0]}
 	outPrev := terms[0]
@@ -103,8 +102,10 @@ func (this *_Expression) Key() string {
 	}
 
 	for _, term := range this.terms[1:] {
-		buf.WriteString(",")
-		buf.WriteString(term.Key())
+		if k := term.Key(); 0 < len(k) {
+			buf.WriteString(",")
+			buf.WriteString(k)
+		}
 	}
 
 	k := buf.String()
@@ -113,25 +114,7 @@ func (this *_Expression) Key() string {
 }
 
 func (this _Expression) String() string {
-	if 0 == len(this.terms) {
-		return "0"
-	}
-
-	buf := bytes.NewBufferString(this.terms[0].String())
-	if 1 == len(this.terms) {
-		return buf.String()
-	}
-
-	for _, term := range this.terms[1:] {
-		if 0 < term.C() {
-			buf.WriteString(" + ")
-		} else {
-			buf.WriteString(" - ")
-		}
-		buf.WriteString(term.String())
-	}
-
-	return buf.String()
+	return this.terms.String()
 }
 
 func (this *_Expression) AddTerm(terms ...ITerm) {
@@ -171,7 +154,7 @@ func (this TermList) Less(i, j int) bool {
 	if this[i].PowerTotal() == this[j].PowerTotal() {
 		return this[i].Key() < this[j].Key()
 	}
-	return this[i].PowerTotal() < this[j].PowerTotal()
+	return this[i].PowerTotal() > this[j].PowerTotal()
 }
 
 func (this _Expression) Terms() TermList {
