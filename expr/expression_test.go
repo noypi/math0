@@ -110,6 +110,76 @@ var ttTermsLinearTen = []ITerm{
 	NewTerm(10, Variable("z")),
 }
 
+var ttTermsRemoveTen = []_testTerm{
+	//0
+	_testTerm{
+		NewTerm(10, VariableN("x", 2)),
+		"x^2",
+		"10*x^2"},
+	//1
+	_testTerm{
+		NewTerm(-10, VariableN("x", 2)),
+		"0",
+		"0",
+	},
+
+	//2
+	_testTerm{
+		NewTerm(-3, VariableN("x", 2)),
+		"x^2",
+		"-3*x^2",
+	},
+
+	//3
+	_testTerm{
+		NewTerm(3, VariableN("x", 2)),
+		"0",
+		"0",
+	},
+
+	//4
+	_testTerm{
+		NewTerm(3, VariableN("x", 2)),
+		"x^2",
+		"3*x^2",
+	},
+
+	//5
+	_testTerm{
+		NewTerm(3, Variable("y")),
+		"x^2,y",
+		"3*x^2 + 3*y",
+	},
+
+	//6
+	_testTerm{
+		NewTerm(-3),
+		"x^2,y",
+		"3*x^2 + 3*y + -3",
+	},
+
+	//7
+	_testTerm{
+		NewTerm(-3, Variable("y")),
+		"x^2",
+		"3*x^2 + -3",
+	},
+
+	//8
+	_testTerm{
+		NewTerm(3),
+		"x^2",
+		"3*x^2",
+	},
+
+	//9
+	_testTerm{
+		NewTerm(-3, VariableN("x", 2)),
+		"0",
+		"0",
+	},
+}
+
 func BenchmarkExpression_AddTerm_Ten(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -126,6 +196,27 @@ func BenchmarkExpression_AddTerm_TenLinear(b *testing.B) {
 		expr := NewExpr()
 		for _, t := range ttTermsLinearTen {
 			expr.AddTerm(t)
+		}
+	}
+}
+
+func TestExpression_RemovedTermTen(t *testing.T) {
+	assert := assertpkg.New(t)
+
+	expr := NewExpr()
+	for i, t := range ttTermsRemoveTen {
+		expr.AddTerm(t.term)
+		assert.Equal(t.expectk, expr.Key(), "key @ i=%d", i)
+		assert.Equal(t.expectS, expr.String(), "string @ i=%d", i)
+	}
+}
+
+func BenchmarkExpression_RemovedTermTen(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		expr := NewExpr()
+		for _, t := range ttTermsRemoveTen {
+			expr.AddTerm(t.term)
 		}
 	}
 }
