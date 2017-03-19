@@ -19,10 +19,13 @@ func (this _RowMap) Delete(sym _Symbol) {
 	delete(this, sym)
 }
 
-func (this _RowMap) Dump(buf *bytes.Buffer) {
+func (this _RowMap) Dump() string {
+	buf := bytes.NewBufferString("")
 	for k, v := range this {
-		k.Dump(buf)
+		buf.WriteString(k.Dump())
 		buf.WriteString(" | ")
-		v.Dump(buf)
+		buf.WriteString(v.Dump())
 	}
+
+	return buf.String()
 }

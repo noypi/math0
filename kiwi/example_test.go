@@ -12,7 +12,7 @@ func init() {
 	expr.SetLogLevel(expr.LogDebug)
 }
 
-func ExampleSolverImpl_AddConstraint() {
+func aExampleSolverImpl_AddConstraint() {
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
 		return kiwi.Variable(name)
 	}

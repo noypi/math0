@@ -64,6 +64,7 @@ func (this *_SolverImpl) AddConstraint(cn *_Constraint) {
 	var tag _Tag
 	row := this.createRow(cn, &tag)
 	subject := this.chooseSubject(row, &tag)
+	DBG("subject=%v, tag=%v, row=%v", subject, tag, row)
 
 	// If chooseSubject could find a valid entering symbol, one
 	// last option is available if the entire row is composed of
@@ -79,6 +80,7 @@ func (this *_SolverImpl) AddConstraint(cn *_Constraint) {
 		}
 	}
 
+	DBG("2 subject=%v", subject)
 	// If an entering symbol still isn't found, then the row must
 	// be added using an artificial variable. If that fails, then
 	// the row represents an unsatisfiable constraint.
@@ -286,17 +288,21 @@ func (this *_SolverImpl) createRow(cn *_Constraint, tag *_Tag) *_Row {
 
 	// Substitute the current basic variables into the row.
 	expression.EachTerm(func(term expr.ITerm) bool {
+		DBG("loop term=%v", term)
 		if 0 == len(term.Vars()) {
 			return true
 		}
 		symbol := this.getVarSymbol(term.VarAt(0))
+		DBG("symbol=%v", symbol)
 		if o, has := this.rows.Get(symbol); has {
 			row.insertRow(o, term.C())
 		} else {
 			row.insert(symbol, term.C())
 		}
+		DBG("loop... row=%v", row.Dump())
 		return true
 	})
+	DBG("row 2=%v", row.Dump())
 
 	// Add the necessary slack, error, and dummy variables.
 	switch cn.op {
@@ -381,19 +387,26 @@ func (this *_SolverImpl) getVarSymbol(v expr.IVariable) _Symbol {
 //
 // If a subject cannot be found, an invalid symbol will be returned.
 func (this *_SolverImpl) chooseSubject(row *_Row, tag *_Tag) _Symbol {
+	DBG(">>>chooseSubject cells=%v", row.cells)
+	DBG("dump=%v", row.Dump())
+	defer DBG("<<<chooseSubject")
 	for k, _ := range row.cells {
+		DBG("loop external=(%v) k id=%v, type=%v", External, k.Id, k.Type)
 		if External == k.Type {
+			DBG("was external")
 			return k
 		}
 	}
 
 	if Slack == tag.marker.Type || Error == tag.marker.Type {
+		DBG("chooseSubject marker test")
 		if row.coefficientFor(tag.marker) < 0.0 {
 			return tag.marker
 		}
 	}
 
 	if Slack == tag.other.Type || Error == tag.other.Type {
+		DBG("other marker test")
 		if row.coefficientFor(tag.other) < 0.0 {
 			return tag.other
 		}
@@ -657,30 +670,32 @@ func (this _SolverImpl) getDualEnteringSymbol(row *_Row) _Symbol {
 	return entering
 }
 
-func (this _SolverImpl) Dump(buf *bytes.Buffer) {
-	buf.WriteString("Objective\n")
+func (this _SolverImpl) Dump() string {
+	buf := bytes.NewBufferString("Objective\n")
 	buf.WriteString("---------\n")
-	this.objective.Dump(buf)
+	buf.WriteString(this.objective.Dump())
 	buf.WriteString("\n")
 
 	buf.WriteString("Tableau\n")
 	buf.WriteString("-------\n")
-	this.rows.Dump(buf)
+	buf.WriteString(this.rows.Dump())
 	buf.WriteString("\n")
 
-	buf.WriteString("Infeasible")
+	buf.WriteString("Infeasible\n")
 	buf.WriteString("----------\n")
-	this.infeasible_rows.Dump(buf)
+	buf.WriteString(this.infeasible_rows.Dump())
 	buf.WriteString("\n")
 
-	buf.WriteString("Variables")
+	buf.WriteString("Variables\n")
 	buf.WriteString("--------\n")
-	this.vars.Dump(buf)
+	buf.WriteString(this.vars.Dump())
 	buf.WriteString("\n")
 
-	buf.WriteString("Constraints")
+	buf.WriteString("Constraints\n")
 	buf.WriteString("-----------\n")
-	this.cns.Dump(buf)
+	buf.WriteString(this.cns.Dump())
 	buf.WriteString("\n")
 	buf.WriteString("\n")
+
+	return buf.String()
 }

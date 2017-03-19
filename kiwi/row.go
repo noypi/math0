@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/noypi/math0"
+	"github.com/noypi/math0/expr"
 )
 
 type CellMap map[_Symbol]float64
@@ -62,8 +63,14 @@ func (this *_Row) insert(symbol _Symbol, coefficient float64 /*= 1.0*/) {
 // coefficient of zero will be removed from the row.
 func (this *_Row) insertRow(other *_Row, coefficient float64) {
 	this.constant += (other.constant * coefficient)
-	for k, v := range this.cells {
-		this.insert(k, v*coefficient)
+	for k, v := range other.cells {
+		coeff := v * coefficient
+		f := this.cells[k] + coeff
+		if math0.IsApproxEqual(0.0, f) {
+			delete(this.cells, k)
+		} else {
+			this.cells[k] = f
+		}
 	}
 }
 
@@ -90,11 +97,13 @@ func (this *_Row) reverseSign() {
 //
 // The given symbol *must* exist in the row.
 func (this *_Row) solveFor(symbol _Symbol) {
+	DBG("solveFor this.cells[symbol]=%v", this.cells[symbol])
 	coeff := -1.0 / this.cells[symbol]
 	delete(this.cells, symbol)
 
 	this.constant *= coeff
 	for k, v := range this.cells {
+		DBG("cells <= v * coeff=%v, v=%v, coeff=%v", v*coeff, v, coeff)
 		this.cells[k] = v * coeff
 	}
 }
@@ -136,6 +145,7 @@ func (this *_Row) substitute(symbol _Symbol, row *_Row) {
 
 func (this _Row) Clone() *_Row {
 	o := new(_Row)
+	o.cells = CellMap{}
 	for k, v := range this.cells {
 		o.cells[k] = v
 	}
@@ -143,10 +153,13 @@ func (this _Row) Clone() *_Row {
 	return o
 }
 
-func (this _Row) Dump(buf *bytes.Buffer) {
+func (this _Row) Dump() string {
+	buf := bytes.NewBufferString(expr.ToTrimZero(this.constant))
 	for k, v := range this.cells {
-		buf.WriteString(fmt.Sprintf(" + %v *", v))
-		k.Dump(buf)
+		buf.WriteString(fmt.Sprintf(" + %v*", v))
+		buf.WriteString(k.Dump())
 	}
 	buf.WriteString("\n")
+
+	return buf.String()
 }

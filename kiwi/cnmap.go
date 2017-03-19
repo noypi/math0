@@ -26,8 +26,10 @@ func (this _CnMap) Delete(cn *_Constraint) {
 	delete(this, cn.String())
 }
 
-func (this _CnMap) Dump(buf *bytes.Buffer) {
+func (this _CnMap) Dump() string {
+	buf := bytes.NewBufferString("")
 	for _, v := range this {
-		v.k.Dump(buf)
+		buf.WriteString(v.k.Dump())
 	}
+	return buf.String()
 }

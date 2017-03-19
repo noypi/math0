@@ -35,10 +35,13 @@ func (this _VarMap) Each(cb func(expr.IVariable, _Symbol) bool) {
 	}
 }
 
-func (this _VarMap) Dump(buf *bytes.Buffer) {
+func (this _VarMap) Dump() string {
+	buf := bytes.NewBufferString("")
 	for _, v := range this {
 		buf.WriteString(v.k.Name() + " = ")
-		v.v.Dump(buf)
+		buf.WriteString(v.v.Dump())
 		buf.WriteString("\n")
 	}
+
+	return buf.String()
 }

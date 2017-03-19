@@ -20,7 +20,8 @@ const (
 	Dummy
 )
 
-func (this _Symbol) Dump(buf *bytes.Buffer) {
+func (this _Symbol) Dump() string {
+	buf := bytes.NewBufferString("")
 	switch this.Type {
 	case Invalid:
 		buf.WriteString("i")
@@ -34,13 +35,17 @@ func (this _Symbol) Dump(buf *bytes.Buffer) {
 		buf.WriteString("d")
 	}
 	buf.WriteString(fmt.Sprintf("%d", this.Id))
+
+	return buf.String()
 }
 
 type _SymbolList []_Symbol
 
-func (this _SymbolList) Dump(buf *bytes.Buffer) {
+func (this _SymbolList) Dump() string {
+	buf := bytes.NewBufferString("")
 	for _, sym := range this {
-		sym.Dump(buf)
+		buf.WriteString(sym.Dump())
 		buf.WriteString("\n")
 	}
+	return buf.String()
 }

@@ -11,7 +11,7 @@ func init() {
 	SetLogLevel(LogDebug)
 }
 
-func TestSimple1(t *testing.T) {
+func aTestSimple1(t *testing.T) {
 	API(">>>TestSimple1")
 	defer API("<<<TestSimple1")
 	assert := assertpkg.New(t)
@@ -31,7 +31,7 @@ func TestSimple1(t *testing.T) {
 	assert.Equal(ValueOf(x.VarAt(0)), ValueOf(y.VarAt(0)))
 }
 
-func TestJustStay1(t *testing.T) {
+func aTestJustStay1(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	x := expr.NewTerm(1, Variable("x"))
@@ -49,35 +49,45 @@ func TestJustStay1(t *testing.T) {
 
 }
 
-/*
 func TestAddDelete1(t *testing.T) {
 	assert := assertpkg.New(t)
 
-	cl := CL()
+	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
+		return Variable(name)
+	}
 
-	x := cl.NewVar("x", 0.0)
-	solver := SimplexSolver(cl)
-	solver.AddConstraint(LinearEquationVVS(x, 100, SWeak()))
-	c10 := LinearInequalityVV0(x, CnLEQ, 10.0)
-	c20 := LinearInequalityVV0(x, CnLEQ, 20.0)
+	solver := Solver()
 
-	solver.AddConstraint(c10).AddConstraint(c20)
-	assert.True(Util.IsApproxEqual(x.Value(), 10.0))
+	solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpEQ)(expr.Terms("100")), Weak()))
+	DBG("dump=>\n%v", solver.Dump())
 
-	solver.RemoveConstraint(c10)
-	assert.True(Util.IsApproxEqual(x.Value(), 20.0))
+	c10 := expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("10"))
+	c20 := expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("20"))
 
-	solver.RemoveConstraint(c20)
-	assert.True(Util.IsApproxEqual(x.Value(), 100.0))
+	solver.AddConstraint(Constraint(c10, Required()))
+	solver.AddConstraint(Constraint(c20, Required()))
 
-	c10again := LinearInequalityVV0(x, CnLEQ, 10.0)
-	solver.AddConstraint(c10).AddConstraint(c10again)
-	assert.True(Util.IsApproxEqual(x.Value(), 10.0))
+	solver.UpdateVariables()
+	assert.Equal(10.0, ValueOf(c10.Left().WithVars("x").VarAt(0)))
 
-	solver.RemoveConstraint(c10)
-	assert.True(Util.IsApproxEqual(x.Value(), 10.0))
+	/*
+		solver.AddConstraint(c10).AddConstraint(c20)
+		assert.True(Util.IsApproxEqual(x.Value(), 10.0))
 
-	solver.RemoveConstraint(c10again)
-	assert.True(Util.IsApproxEqual(x.Value(), 100.0))
+		solver.RemoveConstraint(c10)
+		assert.True(Util.IsApproxEqual(x.Value(), 20.0))
+
+		solver.RemoveConstraint(c20)
+		assert.True(Util.IsApproxEqual(x.Value(), 100.0))
+
+		c10again := LinearInequalityVV0(x, CnLEQ, 10.0)
+		solver.AddConstraint(c10).AddConstraint(c10again)
+		assert.True(Util.IsApproxEqual(x.Value(), 10.0))
+
+		solver.RemoveConstraint(c10)
+		assert.True(Util.IsApproxEqual(x.Value(), 10.0))
+
+		solver.RemoveConstraint(c10again)
+		assert.True(Util.IsApproxEqual(x.Value(), 100.0))
+	*/
 }
-*/

@@ -46,13 +46,14 @@ func (this _Constraint) String() string {
 	return fmt.Sprintf("%s,%s", this.strength, this.expression)
 }
 
-func (this _Constraint) Dump(buf *bytes.Buffer) {
+func (this _Constraint) Dump() string {
+	buf := bytes.NewBufferString("")
 	this.expression.EachTerm(func(term expr.ITerm) bool {
 		if 0 == len(term.Vars()) {
 			return true
 		}
 
-		buf.WriteString(fmt.Sprintf("%s * %v + ", expr.ToTrimZero(term.C()), term.VarAt(0).Name()))
+		buf.WriteString(fmt.Sprintf("%s*%v + ", expr.ToTrimZero(term.C()), term.VarAt(0).Name()))
 		return true
 	})
 	buf.WriteString(expr.ToTrimZero(this.expression.Constant()))
@@ -69,6 +70,8 @@ func (this _Constraint) Dump(buf *bytes.Buffer) {
 	buf.WriteString(" | strength = ")
 	buf.WriteString(this.strength.String())
 	buf.WriteString("\n")
+
+	return buf.String()
 }
 
 /*
