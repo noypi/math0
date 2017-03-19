@@ -117,9 +117,9 @@ func (this *_Term) Key() string {
 
 func (this _Term) String() string {
 	if 0 == len(this.vars) {
-		return toTrimZero(this.c)
+		return ToTrimZero(this.c)
 	}
-	return fmt.Sprintf("%s*%s", toTrimZero(this.c), this.vars.String())
+	return fmt.Sprintf("%s(%s)", ToTrimZero(this.c), this.vars.String())
 }
 
 func (this *_Term) PowerTotal() float64 {

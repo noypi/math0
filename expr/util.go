@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func toTrimZero(f float64) string {
+func ToTrimZero(f float64) string {
 	spow := fmt.Sprintf("%f", f)
 	spow = strings.TrimRight(spow, "0")
 	if '.' == spow[len(spow)-1] {

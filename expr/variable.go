@@ -23,15 +23,15 @@ type _Variable struct {
 
 type VariableList []IVariable
 
-func VariableN(name string, power float64) IVariable {
+func NewVarN(name string, power float64) IVariable {
 	if 1 <= power {
 		return &_Variable{name: name, power: power}
 	}
 	return &_Variable{}
 }
 
-func Variable(name string) IVariable {
-	return VariableN(name, 1.0)
+func NewVar(name string) IVariable {
+	return NewVarN(name, 1.0)
 }
 
 func (this _Variable) Name() string {
@@ -43,7 +43,7 @@ func (this _Variable) Power() float64 {
 }
 
 func (this *_Variable) AddPower(n float64) IVariable {
-	return VariableN(this.name, this.power+n)
+	return NewVarN(this.name, this.power+n)
 }
 
 func (this _Variable) String() string {
@@ -51,7 +51,7 @@ func (this _Variable) String() string {
 		return this.name
 	}
 
-	return fmt.Sprintf("%s^%s", this.name, toTrimZero(this.power))
+	return fmt.Sprintf("%s^%s", this.name, ToTrimZero(this.power))
 }
 
 func (this VariableList) Simplify() (out VariableList) {
@@ -140,8 +140,7 @@ func (this VariableList) PowerTotal() float64 {
 }
 
 func (this VariableList) String() string {
-
-	if 0 == len(this) {
+	if nil == this || 0 == len(this) {
 		return ""
 	} else if 1 == len(this) {
 		return this[0].String()

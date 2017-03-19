@@ -10,9 +10,9 @@ type ExprConstructor func() IExpression
 type EqnConstructor func() IEquation
 
 const (
-	OpEQ Operator = iota
-	OpLEQ
+	OpLEQ Operator = iota
 	OpGEQ
+	OpEQ
 	OpNEQ
 	OpLess
 	OpGreater
@@ -39,4 +39,22 @@ func (this Operator) Test(a, b float64) bool {
 	}
 
 	return false
+}
+
+func (this Operator) String() string {
+	switch this {
+	case OpLEQ:
+		return "<="
+	case OpGEQ:
+		return ">="
+	case OpEQ:
+		return "=="
+	case OpNEQ:
+		return "!="
+	case OpLess:
+		return "<"
+	case OpGreater:
+		return ">"
+	}
+	return "<unkown operator>"
 }

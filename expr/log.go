@@ -1,7 +1,6 @@
 package expr
 
 import (
-	"io"
 	"log"
 
 	"github.com/noypi/logfn"
@@ -29,14 +28,6 @@ var (
 
 var g_logLevel logfn.LogLevel
 
-func init() {
-	log.SetFlags(log.Lmicroseconds | log.LstdFlags)
-}
-
 func SetLogLevel(n LogLevel) {
 	g_logLevel.SetLevel(int(n))
-}
-
-func SetLogOutput(w io.Writer) {
-	log.SetOutput(w)
 }

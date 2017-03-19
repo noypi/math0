@@ -10,21 +10,21 @@ func TestVariable(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	varlist := VariableList{
-		Variable("z"),
-		Variable("x"),
-		Variable("v"),
-		Variable("y"),
-		Variable("z"),
-		Variable("x"),
-		Variable("x"),
-		Variable("y"),
-		Variable("y"),
-		Variable("za"),
+		NewVar("z"),
+		NewVar("x"),
+		NewVar("v"),
+		NewVar("y"),
+		NewVar("z"),
+		NewVar("x"),
+		NewVar("x"),
+		NewVar("y"),
+		NewVar("y"),
+		NewVar("za"),
 	}
 	assert.Equal("v*x^3*y^3*z^2*za", varlist.Key())
 
 	varlist = VariableList{
-		Variable("z"),
+		NewVar("z"),
 	}
 	assert.Equal("z", varlist.Key())
 
@@ -32,7 +32,7 @@ func TestVariable(t *testing.T) {
 
 func BenchmarkVariableStringOneVars(b *testing.B) {
 	varlist := VariableList{
-		Variable("z"),
+		NewVar("z"),
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -42,16 +42,16 @@ func BenchmarkVariableStringOneVars(b *testing.B) {
 
 func BenchmarkVariableStringFiveVars(b *testing.B) {
 	varlist := VariableList{
-		Variable("z"),
-		Variable("x"),
-		Variable("v"),
-		Variable("y"),
-		Variable("z"),
-		Variable("x"),
-		Variable("x"),
-		Variable("y"),
-		Variable("y"),
-		Variable("za"),
+		NewVar("z"),
+		NewVar("x"),
+		NewVar("v"),
+		NewVar("y"),
+		NewVar("z"),
+		NewVar("x"),
+		NewVar("x"),
+		NewVar("y"),
+		NewVar("y"),
+		NewVar("za"),
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

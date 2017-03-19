@@ -12,7 +12,10 @@ import (
 type IExpression interface {
 	fmt.Stringer
 	EachTerm(func(ITerm) bool)
-	Terms() TermList   // sorted by power
+	Constant() float64
+	WithVars(name string) ITerm
+	Terms() TermList // sorted by power
+	TermAt(int) ITerm
 	AddTerm(...ITerm)  // appends
 	SetTerms(...ITerm) // clears, then sets
 	Key() string
@@ -80,10 +83,15 @@ type _Expression struct {
 	key   *string
 }
 
-func NewExpr() IExpression {
-	return &_Expression{
-		terms: TermList{},
+func NewExpr(terms ...ITerm) IExpression {
+	o := &_Expression{
+		terms: terms,
 	}
+
+	if out, bWasModified := SimplifyExpression(o); bWasModified {
+		o.terms = out
+	}
+	return o
 }
 
 func (this *_Expression) Key() string {
@@ -91,7 +99,7 @@ func (this *_Expression) Key() string {
 		return *this.key
 	}
 	if 0 == len(this.terms) {
-		k := "0"
+		k := ""
 		this.key = &k
 		return *this.key
 	}
@@ -103,7 +111,9 @@ func (this *_Expression) Key() string {
 
 	for _, term := range this.terms[1:] {
 		if k := term.Key(); 0 < len(k) {
-			buf.WriteString(",")
+			if 0 < buf.Len() {
+				buf.WriteString(",")
+			}
 			buf.WriteString(k)
 		}
 	}
@@ -150,15 +160,41 @@ func (this TermList) IsSimplified() bool {
 	return true
 }
 
-func (this TermList) Less(i, j int) bool {
-	if this[i].PowerTotal() == this[j].PowerTotal() {
-		return this[i].Key() < this[j].Key()
-	}
-	return this[i].PowerTotal() > this[j].PowerTotal()
-}
-
 func (this _Expression) Terms() TermList {
 	return this.terms
+}
+
+func (this _Expression) TermAt(i int) ITerm {
+	return this.terms[i]
+}
+
+func (this _Expression) Constant() float64 {
+	if 0 == len(this.terms) {
+		return 0.0
+	}
+
+	term := this.terms[0]
+	if 0 < len(term.Vars()) {
+		return 0.0
+	}
+
+	return term.C()
+}
+
+func (this TermList) Less(i, j int) bool {
+	return this[i].Key() < this[j].Key()
+}
+
+func (this _Expression) WithVars(name string) ITerm {
+	i := sort.Search(len(this.terms), func(i int) bool {
+		return this.terms[i].Vars().String() >= name
+	})
+
+	if i < len(this.terms) {
+		return this.terms[i]
+	}
+
+	return nil
 }
 
 func (this _Expression) EachTerm(cb func(term ITerm) bool) {
