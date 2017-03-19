@@ -1,4 +1,4 @@
-Cassowary solver for golang base on kiwi ([github.com/nucleic/kiwi]()).
+Cassowary solver for golang based on kiwi ([github.com/nucleic/kiwi]()).
 
 ## Example
 
