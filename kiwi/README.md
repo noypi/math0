@@ -1,8 +1,8 @@
-Cassowary solver for golang based on kiwi ([github.com/nucleic/kiwi]()).
+Cassowary solver for golang based on kiwi ([github.com/nucleic/kiwi](https://github.com/nucleic/kiwi)).
 
 ## Example
 
-```code
+```go
 func ExampleSolverImpl_AddConstraint() {
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
 		return kiwi.Variable(name)
