@@ -190,7 +190,7 @@ func (this _Expression) WithVars(name string) ITerm {
 		return this.terms[i].Vars().String() >= name
 	})
 
-	if i < len(this.terms) {
+	if i < len(this.terms) && this.terms[i].Vars().String() == name {
 		return this.terms[i]
 	}
 

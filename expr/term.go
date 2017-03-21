@@ -57,11 +57,11 @@ func (this _Term) Var(name string) (v IVariable) {
 	i := sort.Search(len(this.vars), func(i int) bool {
 		return this.vars[i].Name() >= name
 	})
-	if i < len(this.vars) {
+	if i < len(this.vars) && this.vars[i].Name() == name {
 		v = this.vars[i]
 	}
 
-	return nil
+	return
 }
 
 func (this *_Term) SetC(c float64) {
