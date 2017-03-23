@@ -18,3 +18,7 @@ func Variable(name string) *_Variable {
 func ValueOf(v expr.IVariable) float64 {
 	return v.(*_Variable).value
 }
+
+func (this _Variable) Value() float64 {
+	return this.value
+}

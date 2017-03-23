@@ -97,13 +97,11 @@ func (this *_Row) reverseSign() {
 //
 // The given symbol *must* exist in the row.
 func (this *_Row) solveFor(symbol _Symbol) {
-	DBG("solveFor this.cells[symbol]=%v", this.cells[symbol])
 	coeff := -1.0 / this.cells[symbol]
 	delete(this.cells, symbol)
 
 	this.constant *= coeff
 	for k, v := range this.cells {
-		DBG("cells <= v * coeff=%v, v=%v, coeff=%v", v*coeff, v, coeff)
 		this.cells[k] = v * coeff
 	}
 }

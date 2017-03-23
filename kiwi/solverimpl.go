@@ -43,16 +43,16 @@ func Solver() *_SolverImpl {
 
 // Add a constraint to the solver.
 //
-// Throws
-// ------
+// returns
+// -------
 // DuplicateConstraint
 //  	The given constraint has already been added to the solver.
 
 // UnsatisfiableConstraint
 //  	The given constraint is required and cannot be satisfied.
-func (this *_SolverImpl) AddConstraint(cn *_Constraint) {
+func (this *_SolverImpl) AddConstraint(cn *_Constraint) error {
 	if _, has := this.cns.Get(cn); has {
-		panic(DuplicateConstraint(cn))
+		return DuplicateConstraint(cn)
 	}
 
 	// Creating a row causes symbols to reserved for the variables
@@ -64,7 +64,6 @@ func (this *_SolverImpl) AddConstraint(cn *_Constraint) {
 	var tag _Tag
 	row := this.createRow(cn, &tag)
 	subject := this.chooseSubject(row, &tag)
-	DBG("subject=%v, tag=%v, row=%v", subject, tag, row)
 
 	// If chooseSubject could find a valid entering symbol, one
 	// last option is available if the entire row is composed of
@@ -74,19 +73,18 @@ func (this *_SolverImpl) AddConstraint(cn *_Constraint) {
 	// then it represents an unsatisfiable constraint.
 	if Invalid == subject.Type && this.allDummies(row) {
 		if !math0.IsApproxEqual(row.constant, 0.0) {
-			panic(UnsatisfiableConstraint(cn))
+			return UnsatisfiableConstraint(cn)
 		} else {
 			subject = tag.marker
 		}
 	}
 
-	DBG("2 subject=%v", subject)
 	// If an entering symbol still isn't found, then the row must
 	// be added using an artificial variable. If that fails, then
 	// the row represents an unsatisfiable constraint.
 	if Invalid == subject.Type {
 		if !this.addWithArtificialVariable(row) {
-			panic(UnsatisfiableConstraint(cn))
+			return UnsatisfiableConstraint(cn)
 		}
 
 	} else {
@@ -101,18 +99,20 @@ func (this *_SolverImpl) AddConstraint(cn *_Constraint) {
 	// aggregate work due to a smaller average system size. It
 	// also ensures the solver remains in a consistent state.
 	this.optimize(this.objective)
+
+	return nil
 }
 
 // Remove a constraint from the solver.
 //
-// Throws
-// ------
+// returns
+// -------
 // UnknownConstraint
 // The given constraint has not been added to the solver.
-func (this *_SolverImpl) RemoveConstraint(cn *_Constraint) {
+func (this *_SolverImpl) RemoveConstraint(cn *_Constraint) error {
 	tag, has := this.cns.Get(cn)
 	if !has {
-		panic(UnknownConstraint(cn))
+		return UnknownConstraint(cn)
 	}
 
 	this.cns.Delete(cn)
@@ -131,7 +131,7 @@ func (this *_SolverImpl) RemoveConstraint(cn *_Constraint) {
 		var leaving _Symbol
 		leaving, itrow = this.getMarkerLeavingRow(tag.marker)
 		if nil == itrow {
-			panic(InternalSolverError("failed to find leaving row"))
+			return InternalSolverError("failed to find leaving row")
 		}
 		this.rows.Delete(leaving)
 		itrow.solveForLhs(leaving, tag.marker)
@@ -142,6 +142,7 @@ func (this *_SolverImpl) RemoveConstraint(cn *_Constraint) {
 	// solver remains consistent. It makes the solver api easier to
 	// use at a small tradeoff for speed.
 	this.optimize(this.objective)
+	return nil
 }
 
 func (this _SolverImpl) HasConstraint(cn *_Constraint) bool {
@@ -240,7 +241,7 @@ func (this *_SolverImpl) SuggestValue(variable expr.IVariable, value float64) {
 	}
 
 	// Otherwise update each row where the error variables exist.
-	for k, _ := range this.rows {
+	for k, itrow := range this.rows {
 		coeff := itrow.coefficientFor(info.tag.marker)
 		if !math0.IsApproxEqual(coeff, 0.0) &&
 			itrow.Add(delta*coeff) < 0.0 &&
@@ -252,8 +253,6 @@ func (this *_SolverImpl) SuggestValue(variable expr.IVariable, value float64) {
 
 // Update the values of the external solver variables.
 func (this *_SolverImpl) UpdateVariables() {
-	API("+_SolverImpl.UpdateVariables()")
-	defer API("-_SolverImpl.UpdateVariables()")
 	this.vars.Each(func(variable expr.IVariable, symbol _Symbol) bool {
 		if row, has := this.rows.Get(symbol); !has {
 			variable.(*_Variable).value = 0.0
@@ -288,21 +287,17 @@ func (this *_SolverImpl) createRow(cn *_Constraint, tag *_Tag) *_Row {
 
 	// Substitute the current basic variables into the row.
 	expression.EachTerm(func(term expr.ITerm) bool {
-		DBG("loop term=%v", term)
 		if 0 == len(term.Vars()) {
 			return true
 		}
 		symbol := this.getVarSymbol(term.VarAt(0))
-		DBG("symbol=%v", symbol)
 		if o, has := this.rows.Get(symbol); has {
 			row.insertRow(o, term.C())
 		} else {
 			row.insert(symbol, term.C())
 		}
-		DBG("loop... row=%v", row.Dump())
 		return true
 	})
-	DBG("row 2=%v", row.Dump())
 
 	// Add the necessary slack, error, and dummy variables.
 	switch cn.op {
@@ -387,26 +382,19 @@ func (this *_SolverImpl) getVarSymbol(v expr.IVariable) _Symbol {
 //
 // If a subject cannot be found, an invalid symbol will be returned.
 func (this *_SolverImpl) chooseSubject(row *_Row, tag *_Tag) _Symbol {
-	DBG(">>>chooseSubject cells=%v", row.cells)
-	DBG("dump=%v", row.Dump())
-	defer DBG("<<<chooseSubject")
 	for k, _ := range row.cells {
-		DBG("loop external=(%v) k id=%v, type=%v", External, k.Id, k.Type)
 		if External == k.Type {
-			DBG("was external")
 			return k
 		}
 	}
 
 	if Slack == tag.marker.Type || Error == tag.marker.Type {
-		DBG("chooseSubject marker test")
 		if row.coefficientFor(tag.marker) < 0.0 {
 			return tag.marker
 		}
 	}
 
 	if Slack == tag.other.Type || Error == tag.other.Type {
-		DBG("other marker test")
 		if row.coefficientFor(tag.other) < 0.0 {
 			return tag.other
 		}
@@ -668,6 +656,13 @@ func (this _SolverImpl) getDualEnteringSymbol(row *_Row) _Symbol {
 		}
 	}
 	return entering
+}
+
+func (this _SolverImpl) Var(name string) *_Variable {
+	if o, has := this.vars[name]; has {
+		return o.k
+	}
+	return nil
 }
 
 func (this _SolverImpl) Dump() string {

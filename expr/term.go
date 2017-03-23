@@ -61,7 +61,7 @@ func (this _Term) Var(name string) (v IVariable) {
 		v = this.vars[i]
 	}
 
-	return
+	return nil
 }
 
 func (this *_Term) SetC(c float64) {
