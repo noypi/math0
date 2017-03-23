@@ -1,3 +1,6 @@
+/*
+Package kiwi, implements a Cassowary solver for golang based on kiwi (github.com/nucleic/kiwi).
+*/
 package kiwi
 
 import (
