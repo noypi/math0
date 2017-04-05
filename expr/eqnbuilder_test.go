@@ -14,7 +14,7 @@ func init() {
 type _eqnbuildtest struct {
 	left     TermList
 	right    TermList
-	op       Operator
+	relation Relation
 	expected string
 }
 
@@ -23,7 +23,7 @@ var ttEqnBuilder = []_eqnbuildtest{
 	_eqnbuildtest{
 		left:     Terms("x"),
 		right:    Terms("5y"),
-		op:       OpEQ,
+		relation: EQ,
 		expected: "1(x) == 5(y)",
 	},
 
@@ -31,7 +31,7 @@ var ttEqnBuilder = []_eqnbuildtest{
 	_eqnbuildtest{
 		left:     Terms("3x", "-4y"),
 		right:    Terms("5"),
-		op:       OpNEQ,
+		relation: NEQ,
 		expected: "3(x) + -4(y) != 5",
 	},
 
@@ -39,7 +39,7 @@ var ttEqnBuilder = []_eqnbuildtest{
 	_eqnbuildtest{
 		left:     Terms("3x", "-4y"),
 		right:    Terms("5"),
-		op:       OpGEQ,
+		relation: GEQ,
 		expected: "3(x) + -4(y) >= 5",
 	},
 
@@ -47,7 +47,7 @@ var ttEqnBuilder = []_eqnbuildtest{
 	_eqnbuildtest{
 		left:     Terms("3(x)", "-4(y)"),
 		right:    Terms("55z", "6(x^3*y^4)"),
-		op:       OpLEQ,
+		relation: LEQ,
 		expected: "3(x) + -4(y) <= 6(x^3*y^4) + 55(z)",
 	},
 
@@ -55,7 +55,7 @@ var ttEqnBuilder = []_eqnbuildtest{
 	_eqnbuildtest{
 		left:     Terms("3(x)", "-4(y)"),
 		right:    nil,
-		op:       OpLess,
+		relation: Lesser,
 		expected: "3(x) + -4(y) < 0",
 	},
 
@@ -63,7 +63,7 @@ var ttEqnBuilder = []_eqnbuildtest{
 	_eqnbuildtest{
 		left:     Terms("3(x)", "-4(y)"),
 		right:    Terms(""),
-		op:       OpGreater,
+		relation: Greater,
 		expected: "3(x) + -4(y) > 0",
 	},
 }
@@ -71,7 +71,7 @@ var ttEqnBuilder = []_eqnbuildtest{
 func TestEqnBuilder(t *testing.T) {
 	assert := assertpkg.New(t)
 	for i, t := range ttEqnBuilder {
-		eqn := Eqn(t.left)(t.op)(t.right)
+		eqn := Eqn(t.left)(t.relation)(t.right)
 		assert.Equal(t.expected, eqn.String(), "i=%v", i)
 	}
 }
@@ -80,7 +80,7 @@ func ExampleEquation() {
 	left := Terms("3(x)", "-4(y)", "100")
 	right := Terms("55z", "6(x^3*y^4)")
 
-	eqn := Eqn(left)(OpLEQ)(right)
+	eqn := Eqn(left)(LEQ)(right)
 
 	fmt.Printf("%v", eqn)
 	// Output: 100 + 3(x) + -4(y) <= 6(x^3*y^4) + 55(z)

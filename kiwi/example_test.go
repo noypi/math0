@@ -17,13 +17,13 @@ func aExampleSolverImpl_AddConstraint() {
 		return kiwi.Var(name)
 	}
 
-	eqn1 := expr.Eqn(expr.Terms("x"))(expr.OpEQ)(expr.Terms("5"))
-	eqn2 := expr.Eqn(expr.Terms("y"))(expr.OpEQ)(expr.Terms("10"))
+	eqn1 := expr.Eqn(expr.Terms("x"))(expr.EQ)(expr.Terms("5"))
+	eqn2 := expr.Eqn(expr.Terms("y"))(expr.EQ)(expr.Terms("10"))
 
 	solver := kiwi.Solver()
 
-	solver.AddConstraint(kiwi.Constraint(eqn1, kiwi.Weak()))
-	solver.AddConstraint(kiwi.Constraint(eqn2, kiwi.Weak()))
+	solver.AddConstraint(kiwi.NewConstraint(eqn1, kiwi.Weak()))
+	solver.AddConstraint(kiwi.NewConstraint(eqn2, kiwi.Weak()))
 	solver.UpdateVariables()
 
 	xval := kiwi.ValueOf(eqn1.Left().WithVars("x").VarAt(0))

@@ -13,11 +13,11 @@ var (
 	EqnBuilder_VarConstructor  = NewVarN
 )
 
-// Eqn(Terms("3x", "-4y"))(OpNEQ)(Terms("5"))
-func Eqn(left TermList) func(Operator) func(right TermList) IEquation {
-	eqn := Equation(EqnBuilder_ExprConstructor(left...), OpEQ, nil)
-	return func(op Operator) func(right TermList) IEquation {
-		eqn.SetOp(op)
+// Eqn(Terms("3x", "-4y"))(NEQ)(Terms("5"))
+func Eqn(left TermList) func(Relation) func(right TermList) IEquation {
+	eqn := Equation(EqnBuilder_ExprConstructor(left...), EQ, nil)
+	return func(rel Relation) func(right TermList) IEquation {
+		eqn.SetRelation(rel)
 		return func(right TermList) IEquation {
 			if nil == right {
 				return eqn

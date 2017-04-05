@@ -7,25 +7,16 @@ import (
 	"github.com/noypi/math0/expr"
 )
 
-/*
-type RelationalOperator int
-
-const (
-	OP_LE RelationalOperator = iota
-	OP_GE
-	OP_EQ
-)*/
-
-type _Constraint struct {
+type Constraint struct {
 	strength   StrengthType
 	expression expr.IExpression
-	op         expr.Operator
+	relation   expr.Relation
 }
 
-func Constraint(eqn expr.IEquation, strength StrengthType) *_Constraint {
-	o := new(_Constraint)
+func NewConstraint(eqn expr.IEquation, strength StrengthType) *Constraint {
+	o := new(Constraint)
 	o.strength = strength
-	o.op = eqn.Op()
+	o.relation = eqn.Relation()
 
 	var terms expr.TermList
 	eqn.Right().EachTerm(func(term expr.ITerm) bool {
@@ -38,15 +29,15 @@ func Constraint(eqn expr.IEquation, strength StrengthType) *_Constraint {
 	return o
 }
 
-func (this _Constraint) Constant() float64 {
+func (this Constraint) Constant() float64 {
 	return this.expression.Constant()
 }
 
-func (this _Constraint) String() string {
+func (this Constraint) String() string {
 	return fmt.Sprintf("%s,%s", this.strength, this.expression)
 }
 
-func (this _Constraint) Dump() string {
+func (this Constraint) Dump() string {
 	buf := bytes.NewBufferString("")
 	this.expression.EachTerm(func(term expr.ITerm) bool {
 		if 0 == len(term.Vars()) {
@@ -58,12 +49,12 @@ func (this _Constraint) Dump() string {
 	})
 	buf.WriteString(expr.ToTrimZero(this.expression.Constant()))
 
-	switch this.op {
-	case expr.OpLEQ:
+	switch this.relation {
+	case expr.LEQ:
 		buf.WriteString(" <= 0 ")
-	case expr.OpGEQ:
+	case expr.GEQ:
 		buf.WriteString(" >= 0 ")
-	case expr.OpEQ:
+	case expr.EQ:
 		buf.WriteString(" == 0 ")
 	}
 
@@ -73,18 +64,3 @@ func (this _Constraint) Dump() string {
 
 	return buf.String()
 }
-
-/*
-func (this RelationalOperator) String() string {
-	switch this {
-	case OP_LE:
-		return "OP_LE"
-	case OP_GE:
-		return "OP_GE"
-	case OP_EQ:
-		return "OP_EQ"
-	}
-
-	return "<unknown op>"
-}
-*/

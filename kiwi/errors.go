@@ -44,7 +44,7 @@ func DuplicateEditVariable(v expr.IVariable) error {
 	return o
 }
 
-func UnknownConstraint(cn *_Constraint) error {
+func UnknownConstraint(cn *Constraint) error {
 	o := &ErrorData{
 		Data: cn,
 		t:    ErrTypeUnknownConstraint,
@@ -52,7 +52,7 @@ func UnknownConstraint(cn *_Constraint) error {
 	return o
 }
 
-func DuplicateConstraint(cn *_Constraint) error {
+func DuplicateConstraint(cn *Constraint) error {
 	o := &ErrorData{
 		Data: cn,
 		t:    ErrTypeDuplicateConstraint,
@@ -60,7 +60,7 @@ func DuplicateConstraint(cn *_Constraint) error {
 	return o
 }
 
-func UnsatisfiableConstraint(cn *_Constraint) error {
+func UnsatisfiableConstraint(cn *Constraint) error {
 	o := &ErrorData{
 		Data: cn,
 		t:    ErrTypeUnsatisfiableConstraint,

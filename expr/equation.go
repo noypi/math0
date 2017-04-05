@@ -8,18 +8,18 @@ type IEquation interface {
 	fmt.Stringer
 	Left() IExpression
 	Right() IExpression
-	Op() Operator
+	Relation() Relation
 
 	SetLeft(IExpression)
 	SetRight(IExpression)
-	SetOp(Operator)
+	SetRelation(Relation)
 	Clone() IEquation
 }
 
-func Equation(left IExpression, op Operator, right IExpression) IEquation {
+func Equation(left IExpression, rel Relation, right IExpression) IEquation {
 	o := new(_Equation)
 	o.left = left
-	o.op = op
+	o.relation = rel
 	o.right = right
 
 	if nil == o.left {
@@ -42,14 +42,14 @@ func IsEquationTrue(eqn IEquation, m IValuation) (b bool, err error) {
 	if right, err = ValueOfExpr(eqn.Right(), m); nil != err {
 		return
 	}
-	b = eqn.Op().Test(left, right)
+	b = eqn.Relation().Test(left, right)
 	return
 }
 
 type _Equation struct {
-	left  IExpression
-	right IExpression
-	op    Operator
+	left     IExpression
+	right    IExpression
+	relation Relation
 }
 
 func (this _Equation) Left() IExpression {
@@ -60,8 +60,8 @@ func (this _Equation) Right() IExpression {
 	return this.right
 }
 
-func (this *_Equation) Op() Operator {
-	return this.op
+func (this *_Equation) Relation() Relation {
+	return this.relation
 }
 
 func (this *_Equation) SetLeft(expr IExpression) {
@@ -72,18 +72,18 @@ func (this *_Equation) SetRight(expr IExpression) {
 	this.right = expr
 }
 
-func (this *_Equation) SetOp(op Operator) {
-	this.op = op
+func (this *_Equation) SetRelation(relation Relation) {
+	this.relation = relation
 }
 
 func (this _Equation) Clone() IEquation {
 	o := new(_Equation)
 	o.SetLeft(this.left.Clone())
 	o.SetRight(this.right.Clone())
-	o.SetOp(this.op)
+	o.SetRelation(this.relation)
 	return o
 }
 
 func (this _Equation) String() string {
-	return fmt.Sprintf("%s %s %s", this.left, this.op, this.right)
+	return fmt.Sprintf("%s %s %s", this.left, this.relation, this.right)
 }

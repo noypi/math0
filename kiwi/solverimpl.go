@@ -12,9 +12,9 @@ import (
 )
 
 type ISolver interface {
-	AddConstraint(cn *_Constraint) error
-	RemoveConstraint(cn *_Constraint) error
-	HasConstraint(cn *_Constraint) bool
+	AddConstraint(cn *Constraint) error
+	RemoveConstraint(cn *Constraint) error
+	HasConstraint(cn *Constraint) bool
 	AddEditVariable(v expr.IVariable, strength StrengthType)
 	RemoveEditVariable(v expr.IVariable)
 	HasEditVariable(v expr.IVariable) bool
@@ -44,7 +44,7 @@ type _Tag struct {
 
 type _EditInfo struct {
 	tag        *_Tag
-	constraint *_Constraint
+	constraint *Constraint
 	constant   float64
 }
 
@@ -68,7 +68,7 @@ func Solver() ISolver {
 
 // UnsatisfiableConstraint
 //  	The given constraint is required and cannot be satisfied.
-func (this *_SolverImpl) AddConstraint(cn *_Constraint) error {
+func (this *_SolverImpl) AddConstraint(cn *Constraint) error {
 	if _, has := this.cns.Get(cn); has {
 		return DuplicateConstraint(cn)
 	}
@@ -127,7 +127,7 @@ func (this *_SolverImpl) AddConstraint(cn *_Constraint) error {
 // -------
 // UnknownConstraint
 // The given constraint has not been added to the solver.
-func (this *_SolverImpl) RemoveConstraint(cn *_Constraint) error {
+func (this *_SolverImpl) RemoveConstraint(cn *Constraint) error {
 	tag, has := this.cns.Get(cn)
 	if !has {
 		return UnknownConstraint(cn)
@@ -163,7 +163,7 @@ func (this *_SolverImpl) RemoveConstraint(cn *_Constraint) error {
 	return nil
 }
 
-func (this _SolverImpl) HasConstraint(cn *_Constraint) bool {
+func (this _SolverImpl) HasConstraint(cn *Constraint) bool {
 	_, has := this.cns.Get(cn)
 	return has
 }
@@ -190,7 +190,7 @@ func (this *_SolverImpl) AddEditVariable(v expr.IVariable, strength StrengthType
 		panic(BadRequiredStrength())
 	}
 
-	cn := Constraint(expr.Equation(expr.NewExpr(expr.NewTerm(1.0, v)), expr.OpEQ, nil), strength)
+	cn := NewConstraint(expr.Equation(expr.NewExpr(expr.NewTerm(1.0, v)), expr.EQ, nil), strength)
 	this.AddConstraint(cn)
 	var info _EditInfo
 	info.tag, _ = this.cns.Get(cn)
@@ -299,7 +299,7 @@ func (this *_SolverImpl) UpdateVariables() {
 // The tag will be updated with the marker and error symbols to use
 // for tracking the movement of the constraint in the tableau.
 
-func (this *_SolverImpl) createRow(cn *_Constraint, tag *_Tag) *_Row {
+func (this *_SolverImpl) createRow(cn *Constraint, tag *_Tag) *_Row {
 	expression := cn.expression.Clone()
 	row := Row(expression.Constant())
 
@@ -318,12 +318,12 @@ func (this *_SolverImpl) createRow(cn *_Constraint, tag *_Tag) *_Row {
 	})
 
 	// Add the necessary slack, error, and dummy variables.
-	switch cn.op {
-	case expr.OpLEQ:
+	switch cn.relation {
+	case expr.LEQ:
 		fallthrough
-	case expr.OpGEQ:
+	case expr.GEQ:
 		var coeff float64
-		if expr.OpLEQ == cn.op {
+		if expr.LEQ == cn.relation {
 			coeff = 1.0
 		} else {
 			coeff = -1.0
@@ -339,7 +339,7 @@ func (this *_SolverImpl) createRow(cn *_Constraint, tag *_Tag) *_Row {
 		}
 		break
 
-	case expr.OpEQ:
+	case expr.EQ:
 		if cn.strength < _Required {
 			errplus := this.Symbol(Error)
 			errminus := this.Symbol(Error)
@@ -570,7 +570,7 @@ func (this _SolverImpl) anyPivotableSymbol(row *_Row) _Symbol {
 }
 
 // Remove the effects of a constraint on the objective function.
-func (this *_SolverImpl) removeConstraintEffects(cn *_Constraint, tag *_Tag) {
+func (this *_SolverImpl) removeConstraintEffects(cn *Constraint, tag *_Tag) {
 	if Error == tag.marker.Type {
 		this.removeMarkerEffects(tag.marker, cn.strength)
 	} else if Error == tag.other.Type {

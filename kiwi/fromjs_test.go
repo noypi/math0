@@ -21,8 +21,8 @@ func TestSimple1(t *testing.T) {
 
 	solver := Solver()
 
-	eqn := expr.Equation(expr.NewExpr(y), expr.OpEQ, expr.NewExpr(x))
-	solver.AddConstraint(Constraint(eqn, Required()))
+	eqn := expr.Equation(expr.NewExpr(y), expr.EQ, expr.NewExpr(x))
+	solver.AddConstraint(NewConstraint(eqn, Required()))
 
 	solver.UpdateVariables()
 	assert.Equal(0.0, ValueOf(x.VarAt(0)))
@@ -36,8 +36,8 @@ func TestJustStay1(t *testing.T) {
 	y := expr.NewTerm(1, Var("y"))
 	solver := Solver()
 
-	solver.AddConstraint(Constraint(expr.Equation(expr.NewExpr(x, expr.NewTerm(-5.0)), expr.OpEQ, nil), Weak()))
-	solver.AddConstraint(Constraint(expr.Equation(expr.NewExpr(y, expr.NewTerm(-10.0)), expr.OpEQ, nil), Weak()))
+	solver.AddConstraint(NewConstraint(expr.Equation(expr.NewExpr(x, expr.NewTerm(-5.0)), expr.EQ, nil), Weak()))
+	solver.AddConstraint(NewConstraint(expr.Equation(expr.NewExpr(y, expr.NewTerm(-10.0)), expr.EQ, nil), Weak()))
 
 	solver.UpdateVariables()
 	assert.Equal(5.0, ValueOf(x.VarAt(0)))
@@ -54,13 +54,13 @@ func TestAddDelete1(t *testing.T) {
 
 	solver := Solver()
 
-	solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpEQ)(expr.Terms("100")), Weak()))
+	solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.EQ)(expr.Terms("100")), Weak()))
 
-	c10expr := expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("10"))
-	c20expr := expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("20"))
+	c10expr := expr.Eqn(expr.Terms("x"))(expr.LEQ)(expr.Terms("10"))
+	c20expr := expr.Eqn(expr.Terms("x"))(expr.LEQ)(expr.Terms("20"))
 
-	c10 := Constraint(c10expr, Required())
-	c20 := Constraint(c20expr, Required())
+	c10 := NewConstraint(c10expr, Required())
+	c20 := NewConstraint(c20expr, Required())
 	solver.AddConstraint(c10)
 	solver.AddConstraint(c20)
 
@@ -76,8 +76,8 @@ func TestAddDelete1(t *testing.T) {
 	solver.UpdateVariables()
 	assert.Equal(100.0, x.Value())
 
-	c10exprAgain := expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("10"))
-	c10again := Constraint(c10exprAgain, Required())
+	c10exprAgain := expr.Eqn(expr.Terms("x"))(expr.LEQ)(expr.Terms("10"))
+	c10again := NewConstraint(c10exprAgain, Required())
 	solver.AddConstraint(c10)
 	err := solver.AddConstraint(c10again)
 	assert.NotNil(err)
@@ -105,11 +105,11 @@ func TestAddDelete2(t *testing.T) {
 
 	solver := Solver()
 
-	solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpEQ)(expr.Terms("100.0")), Weak()))
-	solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("y"))(expr.OpEQ)(expr.Terms("120.0")), Strong()))
+	solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.EQ)(expr.Terms("100.0")), Weak()))
+	solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("y"))(expr.EQ)(expr.Terms("120.0")), Strong()))
 
-	c10 := Constraint(expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("10.0")), Required())
-	c20 := Constraint(expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("20.0")), Required())
+	c10 := NewConstraint(expr.Eqn(expr.Terms("x"))(expr.LEQ)(expr.Terms("10.0")), Required())
+	c20 := NewConstraint(expr.Eqn(expr.Terms("x"))(expr.LEQ)(expr.Terms("20.0")), Required())
 	solver.AddConstraint(c10)
 	solver.AddConstraint(c20)
 
@@ -123,7 +123,7 @@ func TestAddDelete2(t *testing.T) {
 	assert.Equal(20.0, solver.Var("x").Value())
 	assert.Equal(120.0, solver.Var("y").Value())
 
-	cxy := Constraint(expr.Eqn(expr.Terms("2x"))(expr.OpEQ)(expr.Terms("y")), Required())
+	cxy := NewConstraint(expr.Eqn(expr.Terms("2x"))(expr.EQ)(expr.Terms("y")), Required())
 	solver.AddConstraint(cxy)
 
 	solver.UpdateVariables()
@@ -151,10 +151,10 @@ func TestCasso1(t *testing.T) {
 	}
 
 	solver := Solver()
-	solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("y")), Required()))
-	solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("y"))(expr.OpEQ)(expr.Terms("x + 3")), Required()))
-	solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpEQ)(expr.Terms("10")), Weak()))
-	solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("y"))(expr.OpEQ)(expr.Terms("10")), Weak()))
+	solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.LEQ)(expr.Terms("y")), Required()))
+	solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("y"))(expr.EQ)(expr.Terms("x + 3")), Required()))
+	solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.EQ)(expr.Terms("10")), Weak()))
+	solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("y"))(expr.EQ)(expr.Terms("10")), Weak()))
 
 	solver.UpdateVariables()
 	assert.Equal(10.0, solver.Var("x").Value())
@@ -172,9 +172,9 @@ func TestInconsistent1(t *testing.T) {
 	}
 
 	solver := Solver()
-	err := solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpEQ)(expr.Terms("10.0")), Required()))
+	err := solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.EQ)(expr.Terms("10.0")), Required()))
 	assert.Nil(err)
-	err = solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpEQ)(expr.Terms("5.0")), Required()))
+	err = solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.EQ)(expr.Terms("5.0")), Required()))
 	assert.NotNil(err)
 	assert.True(strings.Contains(err.Error(), "UnsatisfiableConstraint"))
 }
@@ -187,9 +187,9 @@ func TestInconsistent2(t *testing.T) {
 	}
 
 	solver := Solver()
-	err := solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpGEQ)(expr.Terms("10.0")), Required()))
+	err := solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.GEQ)(expr.Terms("10.0")), Required()))
 	assert.Nil(err)
-	err = solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpLEQ)(expr.Terms("5.0")), Required()))
+	err = solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.LEQ)(expr.Terms("5.0")), Required()))
 	assert.NotNil(err)
 	assert.True(strings.Contains(err.Error(), "UnsatisfiableConstraint"))
 }
@@ -244,17 +244,17 @@ func TestInconsistent3(t *testing.T) {
 	}
 
 	solver := Solver()
-	err := solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("w"))(expr.OpGEQ)(expr.Terms("10.0")), Required()))
+	err := solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("w"))(expr.GEQ)(expr.Terms("10.0")), Required()))
 	assert.Nil(err)
-	err = solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("x"))(expr.OpGEQ)(expr.Terms("w")), Required()))
+	err = solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("x"))(expr.GEQ)(expr.Terms("w")), Required()))
 	assert.Nil(err)
-	err = solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("y"))(expr.OpGEQ)(expr.Terms("x")), Required()))
+	err = solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("y"))(expr.GEQ)(expr.Terms("x")), Required()))
 	assert.Nil(err)
-	err = solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("z"))(expr.OpGEQ)(expr.Terms("y")), Required()))
+	err = solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("z"))(expr.GEQ)(expr.Terms("y")), Required()))
 	assert.Nil(err)
-	err = solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("z"))(expr.OpGEQ)(expr.Terms("8.0")), Required()))
+	err = solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("z"))(expr.GEQ)(expr.Terms("8.0")), Required()))
 	assert.Nil(err)
-	err = solver.AddConstraint(Constraint(expr.Eqn(expr.Terms("z"))(expr.OpLEQ)(expr.Terms("4.0")), Required()))
+	err = solver.AddConstraint(NewConstraint(expr.Eqn(expr.Terms("z"))(expr.LEQ)(expr.Terms("4.0")), Required()))
 	assert.NotNil(err)
 	assert.True(strings.Contains(err.Error(), "UnsatisfiableConstraint"))
 }

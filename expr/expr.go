@@ -4,57 +4,57 @@ import (
 	"github.com/noypi/math0"
 )
 
-type Operator int
+type Relation int
 type TermConstructor func(c float64, varname string, power int) ITerm
 type ExprConstructor func() IExpression
 type EqnConstructor func() IEquation
 
 const (
-	OpLEQ Operator = iota
-	OpGEQ
-	OpEQ
-	OpNEQ
-	OpLess
-	OpGreater
+	LEQ Relation = iota
+	GEQ
+	EQ
+	NEQ
+	Lesser
+	Greater
 )
 
 type IValuation interface {
 	Get(varname string) (float64, bool)
 }
 
-func (this Operator) Test(a, b float64) bool {
+func (this Relation) Test(a, b float64) bool {
 	switch this {
-	case OpEQ:
+	case EQ:
 		return math0.IsApproxEqual(a, b)
-	case OpLEQ:
+	case LEQ:
 		return a < b || math0.IsApproxEqual(a, b)
-	case OpGEQ:
+	case GEQ:
 		return a > b || math0.IsApproxEqual(a, b)
-	case OpNEQ:
+	case NEQ:
 		return !math0.IsApproxEqual(a, b)
-	case OpLess:
+	case Lesser:
 		return a < b
-	case OpGreater:
+	case Greater:
 		return a > b
 	}
 
 	return false
 }
 
-func (this Operator) String() string {
+func (this Relation) String() string {
 	switch this {
-	case OpLEQ:
+	case LEQ:
 		return "<="
-	case OpGEQ:
+	case GEQ:
 		return ">="
-	case OpEQ:
+	case EQ:
 		return "=="
-	case OpNEQ:
+	case NEQ:
 		return "!="
-	case OpLess:
+	case Lesser:
 		return "<"
-	case OpGreater:
+	case Greater:
 		return ">"
 	}
-	return "<unkown operator>"
+	return "<unkown relation>"
 }

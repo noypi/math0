@@ -243,7 +243,7 @@ func TestConstant(t *testing.T) {
 func TestWithVars(t *testing.T) {
 	assert := assertpkg.New(t)
 
-	eqn := Eqn(Terms("5(x*y^2)", "2(x*y)", "3(z)"))(OpEQ)(nil)
+	eqn := Eqn(Terms("5(x*y^2)", "2(x*y)", "3(z)"))(EQ)(nil)
 	assert.Equal("3(z)", eqn.Left().WithVars("z").String())
 	assert.Equal("5(x*y^2)", eqn.Left().WithVars("x*y^2").String())
 	assert.Equal("2(x*y)", eqn.Left().WithVars("x*y").String())

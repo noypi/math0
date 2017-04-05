@@ -6,11 +6,11 @@ import (
 
 type _CnMap map[string]*_cnMapVal
 type _cnMapVal struct {
-	k *_Constraint
+	k *Constraint
 	v *_Tag
 }
 
-func (this _CnMap) Get(cn *_Constraint) (tag *_Tag, has bool) {
+func (this _CnMap) Get(cn *Constraint) (tag *_Tag, has bool) {
 	v, has := this[cn.String()]
 	if has {
 		tag = v.v
@@ -18,11 +18,11 @@ func (this _CnMap) Get(cn *_Constraint) (tag *_Tag, has bool) {
 	return
 }
 
-func (this _CnMap) Put(cn *_Constraint, tag *_Tag) {
+func (this _CnMap) Put(cn *Constraint, tag *_Tag) {
 	this[cn.String()] = &_cnMapVal{k: cn, v: tag}
 }
 
-func (this _CnMap) Delete(cn *_Constraint) {
+func (this _CnMap) Delete(cn *Constraint) {
 	delete(this, cn.String())
 }
 
