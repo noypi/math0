@@ -7,7 +7,7 @@ import (
 )
 
 type _varMapVal struct {
-	k *_Variable
+	k *Variable
 	v _Symbol
 }
 type _VarMap map[string]*_varMapVal
@@ -24,7 +24,7 @@ func (this _VarMap) Get(v expr.IVariable) (symbol _Symbol, has bool) {
 }
 
 func (this _VarMap) Put(v expr.IVariable, symbol _Symbol) {
-	this[v.Name()] = &_varMapVal{k: v.(*_Variable), v: symbol}
+	this[v.Name()] = &_varMapVal{k: v.(*Variable), v: symbol}
 }
 
 func (this _VarMap) Each(cb func(expr.IVariable, _Symbol) bool) {

@@ -11,6 +11,21 @@ import (
 	"github.com/noypi/math0/expr"
 )
 
+type ISolver interface {
+	AddConstraint(cn *_Constraint) error
+	RemoveConstraint(cn *_Constraint) error
+	HasConstraint(cn *_Constraint) bool
+	AddEditVariable(v expr.IVariable, strength StrengthType)
+	RemoveEditVariable(v expr.IVariable)
+	HasEditVariable(v expr.IVariable) bool
+	SuggestValue(variable expr.IVariable, value float64)
+	UpdateVariables()
+	Symbol(t SymbolType) _Symbol
+	DualOptimize()
+	Var(name string) *Variable
+	Dump() string
+}
+
 type _SolverImpl struct {
 	id_tick         int64
 	infeasible_rows _SymbolList
@@ -33,7 +48,7 @@ type _EditInfo struct {
 	constant   float64
 }
 
-func Solver() *_SolverImpl {
+func Solver() ISolver {
 	o := new(_SolverImpl)
 	o.objective = Row(0.0)
 	o.cns = _CnMap{}
@@ -258,9 +273,9 @@ func (this *_SolverImpl) SuggestValue(variable expr.IVariable, value float64) {
 func (this *_SolverImpl) UpdateVariables() {
 	this.vars.Each(func(variable expr.IVariable, symbol _Symbol) bool {
 		if row, has := this.rows.Get(symbol); !has {
-			variable.(*_Variable).value = 0.0
+			variable.(*Variable).value = 0.0
 		} else {
-			variable.(*_Variable).value = row.constant
+			variable.(*Variable).value = row.constant
 		}
 		return true
 	})
@@ -661,7 +676,7 @@ func (this _SolverImpl) getDualEnteringSymbol(row *_Row) _Symbol {
 	return entering
 }
 
-func (this _SolverImpl) Var(name string) *_Variable {
+func (this _SolverImpl) Var(name string) *Variable {
 	if o, has := this.vars[name]; has {
 		return o.k
 	}

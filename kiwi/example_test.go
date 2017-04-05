@@ -14,7 +14,7 @@ func init() {
 
 func aExampleSolverImpl_AddConstraint() {
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
-		return kiwi.Variable(name)
+		return kiwi.Var(name)
 	}
 
 	eqn1 := expr.Eqn(expr.Terms("x"))(expr.OpEQ)(expr.Terms("5"))

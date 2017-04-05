@@ -16,8 +16,8 @@ func init() {
 func TestSimple1(t *testing.T) {
 	assert := assertpkg.New(t)
 
-	x := expr.NewTerm(167.0, Variable("x"))
-	y := expr.NewTerm(2.0, Variable("y"))
+	x := expr.NewTerm(167.0, Var("x"))
+	y := expr.NewTerm(2.0, Var("y"))
 
 	solver := Solver()
 
@@ -32,8 +32,8 @@ func TestSimple1(t *testing.T) {
 func TestJustStay1(t *testing.T) {
 	assert := assertpkg.New(t)
 
-	x := expr.NewTerm(1, Variable("x"))
-	y := expr.NewTerm(1, Variable("y"))
+	x := expr.NewTerm(1, Var("x"))
+	y := expr.NewTerm(1, Var("y"))
 	solver := Solver()
 
 	solver.AddConstraint(Constraint(expr.Equation(expr.NewExpr(x, expr.NewTerm(-5.0)), expr.OpEQ, nil), Weak()))
@@ -49,7 +49,7 @@ func TestAddDelete1(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
-		return Variable(name)
+		return Var(name)
 	}
 
 	solver := Solver()
@@ -100,7 +100,7 @@ func TestAddDelete2(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
-		return Variable(name)
+		return Var(name)
 	}
 
 	solver := Solver()
@@ -147,7 +147,7 @@ func TestCasso1(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
-		return Variable(name)
+		return Var(name)
 	}
 
 	solver := Solver()
@@ -168,7 +168,7 @@ func TestInconsistent1(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
-		return Variable(name)
+		return Var(name)
 	}
 
 	solver := Solver()
@@ -183,7 +183,7 @@ func TestInconsistent2(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
-		return Variable(name)
+		return Var(name)
 	}
 
 	solver := Solver()
@@ -198,11 +198,11 @@ func TestMultiedit(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
-		return Variable(name)
+		return Var(name)
 	}
 
 	solver := Solver()
-	x, y, w, h := Variable("x"), Variable("y"), Variable("w"), Variable("h")
+	x, y, w, h := Var("x"), Var("y"), Var("w"), Var("h")
 	solver.AddEditVariable(x, Strong())
 	solver.AddEditVariable(y, Strong())
 	solver.AddEditVariable(w, Strong())
@@ -240,7 +240,7 @@ func TestInconsistent3(t *testing.T) {
 	assert := assertpkg.New(t)
 
 	expr.EqnBuilder_VarConstructor = func(name string, power float64) expr.IVariable {
-		return Variable(name)
+		return Var(name)
 	}
 
 	solver := Solver()
