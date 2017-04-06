@@ -16,32 +16,37 @@ func init() {
 func TestSimple1(t *testing.T) {
 	assert := assertpkg.New(t)
 
-	x := expr.NewTerm(167.0, Var("x"))
-	y := expr.NewTerm(2.0, Var("y"))
+	x := Var("x")
+	y := Var("y")
+	xterm := expr.NewTerm(167.0, x)
+	yterm := expr.NewTerm(2.0, y)
 
 	solver := Solver()
 
-	eqn := expr.Equation(expr.NewExpr(y), expr.EQ, expr.NewExpr(x))
+	eqn := expr.Equation(expr.NewExpr(yterm), expr.EQ, expr.NewExpr(xterm))
 	solver.AddConstraint(NewConstraint(eqn, Required()))
 
 	solver.UpdateVariables()
-	assert.Equal(0.0, ValueOf(x.VarAt(0)))
-	assert.Equal(ValueOf(x.VarAt(0)), ValueOf(y.VarAt(0)))
+	assert.Equal(0.0, x.Value())
+	assert.Equal(x.Value(), y.Value())
 }
 
 func TestJustStay1(t *testing.T) {
 	assert := assertpkg.New(t)
 
-	x := expr.NewTerm(1, Var("x"))
-	y := expr.NewTerm(1, Var("y"))
+	x := Var("x")
+	y := Var("y")
+	xterm := expr.NewTerm(1, x)
+	yterm := expr.NewTerm(1, y)
+
 	solver := Solver()
 
-	solver.AddConstraint(NewConstraint(expr.Equation(expr.NewExpr(x, expr.NewTerm(-5.0)), expr.EQ, nil), Weak()))
-	solver.AddConstraint(NewConstraint(expr.Equation(expr.NewExpr(y, expr.NewTerm(-10.0)), expr.EQ, nil), Weak()))
+	solver.AddConstraint(NewConstraint(expr.Equation(expr.NewExpr(xterm, expr.NewTerm(-5.0)), expr.EQ, nil), Weak()))
+	solver.AddConstraint(NewConstraint(expr.Equation(expr.NewExpr(yterm, expr.NewTerm(-10.0)), expr.EQ, nil), Weak()))
 
 	solver.UpdateVariables()
-	assert.Equal(5.0, ValueOf(x.VarAt(0)))
-	assert.Equal(10.0, ValueOf(y.VarAt(0)))
+	assert.Equal(5.0, x.Value())
+	assert.Equal(10.0, y.Value())
 
 }
 
