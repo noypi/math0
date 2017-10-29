@@ -17,20 +17,22 @@ func NewConstraint(eqn expr.IEquation, strength StrengthType) *Constraint {
 	o := new(Constraint)
 	o.strength = strength
 	o.relation = eqn.Relation()
+	expr2 := eqn.Left().Clone()
 
-	var terms expr.TermList
 	eqn.Right().EachTerm(func(term expr.ITerm) bool {
-		terms = append(terms, expr.NewTerm(-term.C(), term.Vars()...))
+		expr2.AddTerm(expr.NewTerm(-term.C(), term.Vars()...))
 		return true
 	})
-	eqn.Left().AddTerm(terms...)
-	eqn.Right().AddTerm(terms...)
-	o.expression = eqn.Left()
+	o.expression = expr2
 	return o
 }
 
 func (this Constraint) Constant() float64 {
 	return this.expression.Constant()
+}
+
+func (this Constraint) Expression() expr.IExpression {
+	return this.expression
 }
 
 func (this Constraint) String() string {

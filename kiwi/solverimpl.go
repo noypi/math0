@@ -5,7 +5,9 @@ package kiwi
 
 import (
 	"bytes"
+	"fmt"
 	"math"
+	"sync"
 
 	"github.com/noypi/math0"
 	"github.com/noypi/math0/expr"
@@ -36,6 +38,9 @@ type _SolverImpl struct {
 	vars  _VarMap
 	rows  _RowMap
 	edits _EditMap
+
+	lcn   sync.RWMutex
+	ledit sync.RWMutex
 }
 
 type _Tag struct {
@@ -69,6 +74,9 @@ func Solver() ISolver {
 // UnsatisfiableConstraint
 //  	The given constraint is required and cannot be satisfied.
 func (this *_SolverImpl) AddConstraint(cn *Constraint) error {
+	this.lcn.Lock()
+	defer this.lcn.Unlock()
+
 	if _, has := this.cns.Get(cn); has {
 		return DuplicateConstraint(cn)
 	}
@@ -128,6 +136,9 @@ func (this *_SolverImpl) AddConstraint(cn *Constraint) error {
 // UnknownConstraint
 // The given constraint has not been added to the solver.
 func (this *_SolverImpl) RemoveConstraint(cn *Constraint) error {
+	this.lcn.Lock()
+	defer this.lcn.Unlock()
+
 	tag, has := this.cns.Get(cn)
 	if !has {
 		return UnknownConstraint(cn)
@@ -163,9 +174,11 @@ func (this *_SolverImpl) RemoveConstraint(cn *Constraint) error {
 	return nil
 }
 
-func (this _SolverImpl) HasConstraint(cn *Constraint) bool {
-	_, has := this.cns.Get(cn)
-	return has
+func (this _SolverImpl) HasConstraint(cn *Constraint) (has bool) {
+	this.lcn.RLock()
+	_, has = this.cns.Get(cn)
+	this.lcn.RUnlock()
+	return
 }
 
 // Add an edit variable to the solver.
@@ -181,6 +194,9 @@ func (this _SolverImpl) HasConstraint(cn *Constraint) bool {
 // BadRequiredStrength
 // 	The given strength is >= required.
 func (this *_SolverImpl) AddEditVariable(v expr.IVariable, strength StrengthType) {
+	this.ledit.Lock()
+	defer this.ledit.Unlock()
+
 	if _, has := this.edits.Get(v); has {
 		panic(DuplicateEditVariable(v))
 	}
@@ -206,6 +222,9 @@ func (this *_SolverImpl) AddEditVariable(v expr.IVariable, strength StrengthType
 // UnknownEditVariable
 // 	The given edit variable has not been added to the solver.
 func (this *_SolverImpl) RemoveEditVariable(v expr.IVariable) {
+	this.ledit.Lock()
+	defer this.ledit.Unlock()
+
 	info, has := this.edits.Get(v)
 	if !has {
 		panic(UnknownEditVariable(v))
@@ -215,8 +234,10 @@ func (this *_SolverImpl) RemoveEditVariable(v expr.IVariable) {
 	this.edits.Delete(v)
 }
 
-func (this _SolverImpl) HasEditVariable(v expr.IVariable) bool {
-	_, has := this.edits.Get(v)
+func (this _SolverImpl) HasEditVariable(v expr.IVariable) (has bool) {
+	this.ledit.RLock()
+	_, has = this.edits.Get(v)
+	this.ledit.RUnlock()
 	return has
 }
 
@@ -231,6 +252,9 @@ func (this _SolverImpl) HasEditVariable(v expr.IVariable) bool {
 // 	The given edit variable has not been added to the solver.
 //
 func (this *_SolverImpl) SuggestValue(variable expr.IVariable, value float64) {
+	this.ledit.RLock()
+	defer this.ledit.RUnlock()
+
 	info, has := this.edits.Get(variable)
 	if !has {
 		panic(UnknownEditVariable(variable))
@@ -683,7 +707,10 @@ func (this _SolverImpl) Var(name string) *Variable {
 	return nil
 }
 
-func (this _SolverImpl) Dump() string {
+func (this *_SolverImpl) Dump() string {
+	this.lcn.Lock()
+	defer this.lcn.Unlock()
+
 	buf := bytes.NewBufferString("Objective\n")
 	buf.WriteString("---------\n")
 	buf.WriteString(this.objective.Dump())
@@ -709,6 +736,14 @@ func (this _SolverImpl) Dump() string {
 	buf.WriteString(this.cns.Dump())
 	buf.WriteString("\n")
 	buf.WriteString("\n")
+
+	buf.WriteString("Variables\n")
+	buf.WriteString("---------\n")
+	this.vars.Each(func(variable expr.IVariable, symbol _Symbol) bool {
+		v := variable.(*Variable)
+		buf.WriteString(fmt.Sprintf("%s = %f\n", v.Name(), v.Value()))
+		return true
+	})
 
 	return buf.String()
 }
